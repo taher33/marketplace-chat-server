@@ -5,52 +5,43 @@ const { handleToken } = require("../utils/jwt-token");
 
 module.exports = (io, socket, client) => {
   async function privateMessage(payload, cb) {
-    handleToken(socket);
-    if (!socket.user.data.id) return cb({ error: "login please" }); //! should handle the error in the client
+    if (!payload.sender) return cb({ status: "error", error: "login please" });
+    if (!payload.reciever)
+      return cb({ status: "error", error: "select a user" });
+    if (!payload.content)
+      return cb({ status: "error", error: "select a user" });
 
-    const { email, message } = payload;
+    const { reciever, sender, content } = payload;
     try {
       const usersString = await client.smembers("users");
 
-      let recieverId;
-      let msg;
       const users = usersString.map((user) => JSON.parse(user));
-      const user = users.filter((user) => user.email === email);
+      const user = users.filter((user) => user._id === reciever);
 
-      // TODO : check if this works down here
+      let msg = {
+        reciever,
+        sender,
+        content,
+      };
+
       if (user.length !== 0) {
-        recieverId = user[0].id;
-        msg = {
-          reciever: recieverId,
-          sender: socket.user.data.id,
-          content: message,
-        };
-
-        socket.to(user[0].id).emit("private message", msg);
-      } else {
-        recieverId = await Users.find({ email })._id;
+        socket.to(reciever).emit("private message", msg);
       }
 
-      //todo: make the error handler for this
-
-      if (!recieverId) return cb({ error: "user does not exist" });
-      msg.reciever = recieverId;
-      cb({ message: msg });
-      console.log("id exists ----------------");
-      // storing the message
       await Messages.create({
-        sender: socket.user.data.id,
-        content: message,
-        reciever: recieverId,
+        sender,
+        content,
+        reciever,
       });
+
+      cb({ status: "success", msg });
     } catch (err) {
       const error = handleError(err);
-      cb({ error });
+      cb({ status: "error", error });
     }
   }
   const getMessages = async (payload, cb) => {
     const selectedUserID = payload.id;
-    handleToken(socket);
 
     let prevMessages = [];
     try {

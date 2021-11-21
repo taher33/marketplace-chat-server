@@ -3,7 +3,6 @@ const app = express();
 const cors = require("cors");
 const morgan = require("morgan");
 const http = require("http");
-const redis = require("redis");
 const mongoose = require("mongoose");
 const users = require("./routes/users");
 const { signUp } = require("./routes/handleAuth");
@@ -15,19 +14,22 @@ const server = http.createServer(app);
 const dotenv = require("dotenv").config({
   path: "./config.env",
 });
+let redisClient;
+if (process.env.ENVIRONMENT === "prod") {
+  redisClient = asyncRedis.createClient({
+    host: process.env.REDIS_ENDPOINT,
+    port: process.env.REDIS_PORT,
+    password: process.env.REDIS_PASS,
+  });
+} else {
+  redisClient = asyncRedis.createClient();
+}
 
-const client = asyncRedis.createClient({
-  host: process.env.REDIS_ENDPOINT,
-  port: process.env.REDIS_PORT,
-  password: process.env.REDIS_PASS,
-});
-// const client = asyncRedis.createClient();
-
-client.on("error", function (err) {
+redisClient.on("error", function (err) {
   console.log("Error " + err);
 });
 
-client.on("connect", function (err) {
+redisClient.on("connect", function (err) {
   console.log("Error " + err);
 });
 
@@ -42,7 +44,7 @@ const io = require("socket.io")(server, {
 });
 
 mongoose.connect(
-  `mongodb+srv://taher33:${process.env.MONGO_PASS}@node-shop.rcpzm.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`,
+  `mongodb+srv://taher:${process.env.MONGO_PASS}@cluster0.1iwzt.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`,
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -61,31 +63,10 @@ const wrap = (middleware) => (socket, next) =>
   middleware(socket.request, {}, next);
 //socket middleware
 
-// io.on("connection", (socket) => {
-//   client.lrange("user", 0, -1, (err, user) => {
-//     console.log("user", user);
-//   });
-
-//   // socket.on("login", { email, password });
-
-//   socket.on("join room", ({ room, name }) => {
-//     const { error, success } = addUser({ id: socket.id, name, room });
-//     console.log("error", error);
-//     console.log("success", success);
-//     socket.join("room");
-//   });
-
-//   socket.on("message", ({ name, message }) => {
-//     const user = getUser(name);
-
-//     socket.to(user.id).emit("message", message);
-//   });
-// });
-
 //functions
 const onConnection = (socket) => {
-  signUp(io, socket, client);
-  handlechat(io, socket, client);
+  signUp(io, socket, redisClient);
+  handlechat(io, socket, redisClient);
 
   io.of("/").adapter.on("join-room", (room, id) => {
     console.log(`socket ${id} has joined room ${room}`);
@@ -95,6 +76,6 @@ const onConnection = (socket) => {
 //connection
 io.on("connection", onConnection);
 
-server.listen(5000, () => {
-  console.log("listening on port:5000");
+server.listen(8080, () => {
+  console.log("listening on port:8080");
 });
