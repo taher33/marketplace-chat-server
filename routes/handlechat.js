@@ -23,8 +23,8 @@ module.exports = (io, socket, client) => {
         sender,
         content,
       };
-
       if (user.length !== 0) {
+        console.log(msg);
         socket.to(reciever).emit("private message", msg);
       }
 
@@ -41,26 +41,25 @@ module.exports = (io, socket, client) => {
     }
   }
   const getMessages = async (payload, cb) => {
-    const selectedUserID = payload.id;
-
-    let prevMessages = [];
+    const { sender, reciever } = payload;
+    if (!sender) return cb({ status: "error", error: "please login first" });
+    if (!reciever)
+      return cb({ status: "error", error: "please select a user first" });
     try {
-      const prevmsg1 = await Messages.find({
-        sender: selectedUserID,
-        reciever: socket.user.data.id,
+      // const prevMessages = await Messages.find({
+      //   sender,
+      //   reciever,
+      // });
+
+      const prevMessages = await Messages.find({
+        sender: [reciever, sender],
+        reciever: [sender, reciever],
       });
-      const prevmsg2 = await Messages.find({
-        sender: socket.user.data.id,
-        reciever: selectedUserID,
-      });
-      prevMessages = [...prevmsg1, ...prevmsg2];
-      prevMessages.sort((msg1, msg2) => {
-        return msg1.createdAt - msg2.createdAt;
-      });
-      cb({ message: prevMessages });
+      cb({ status: "success", prevMessages });
     } catch (err) {
       const error = handleError(err);
-      cb({ error });
+      console.log(err);
+      cb({ status: "error", error });
     }
   };
 

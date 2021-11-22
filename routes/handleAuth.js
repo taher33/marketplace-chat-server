@@ -44,12 +44,17 @@ exports.signUp = (io, socket, client) => {
     try {
       const { user } = payload;
       const ConnectedUser = JSON.stringify(user);
-      await client.sadd("users", ConnectedUser);
-      // const usersString = await client.smembers("users");
-      // let users = usersString.map((user) => JSON.parse(user));
+      const usersString = await client.smembers("users");
+      let users = usersString
+        .map((user) => JSON.parse(user))
+        .filter((el) => el._id === user._id);
+      if (!users[0]) {
+        await client.sadd("users", ConnectedUser);
+      }
       cb({ status: "success" });
       socket.join(user._id);
     } catch (err) {
+      console.log(err);
       const error = handleError(err);
       cb({ status: "error", error });
     }
