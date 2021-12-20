@@ -1,5 +1,5 @@
 const Messages = require("../models/messages");
-const Users = require("../models/users");
+const Notifications = require("../models/notification");
 const { handleError } = require("../utils/errors");
 const { handleToken } = require("../utils/jwt-token");
 
@@ -26,6 +26,14 @@ module.exports = (io, socket, client) => {
       if (user.length !== 0) {
         console.log(msg);
         socket.to(reciever).emit("private message", msg);
+      } else {
+        //create notification in case user is not connected
+        await Notifications.create({
+          type: "message",
+          client: reciever,
+          body: content,
+          creator: sender,
+        });
       }
 
       await Messages.create({
@@ -40,17 +48,13 @@ module.exports = (io, socket, client) => {
       cb({ status: "error", error });
     }
   }
+
   const getMessages = async (payload, cb) => {
     const { sender, reciever } = payload;
     if (!sender) return cb({ status: "error", error: "please login first" });
     if (!reciever)
       return cb({ status: "error", error: "please select a user first" });
     try {
-      // const prevMessages = await Messages.find({
-      //   sender,
-      //   reciever,
-      // });
-
       const prevMessages = await Messages.find({
         sender: [reciever, sender],
         reciever: [sender, reciever],
@@ -58,7 +62,6 @@ module.exports = (io, socket, client) => {
       cb({ status: "success", prevMessages });
     } catch (err) {
       const error = handleError(err);
-      console.log(err);
       cb({ status: "error", error });
     }
   };

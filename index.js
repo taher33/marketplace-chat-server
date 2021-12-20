@@ -4,7 +4,6 @@ const cors = require("cors");
 const morgan = require("morgan");
 const http = require("http");
 const mongoose = require("mongoose");
-const users = require("./routes/users");
 const { signUp } = require("./routes/handleAuth");
 const handlechat = require("./routes/handlechat");
 const asyncRedis = require("async-redis");
@@ -56,7 +55,6 @@ mongoose.connect(
 app.get("/", (req, res) => {
   res.send("hey there");
 });
-app.use("/users", users);
 
 // function to wrap the express middleware
 const wrap = (middleware) => (socket, next) =>
@@ -68,9 +66,9 @@ const onConnection = (socket) => {
   signUp(io, socket, redisClient);
   handlechat(io, socket, redisClient);
 
-  io.of("/").adapter.on("join-room", (room, id) => {
-    console.log(`socket ${id} has joined room ${room}`);
-  });
+  // io.of("/").adapter.on("join-room", (room, id) => {
+  //   console.log(`socket ${id} has joined room ${room}`);
+  // });
 };
 
 //connection

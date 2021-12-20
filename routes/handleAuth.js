@@ -1,45 +1,9 @@
 const { handleError } = require("../utils/errors");
+const User = require("../models/user");
+const Messages = require("../models/messages");
+const mongoose = require("mongoose");
 
 exports.signUp = (io, socket, client) => {
-  // const signup = async (payload, cb) => {
-  //   const { user } = payload;
-  //   if (!user) return cb({ error: "must specify a user" });
-  //   try {
-  //     client.sadd(
-  //       "users",
-  //       JSON.stringify({
-  //         user,
-  //       })
-  //     );
-
-  //     const usersString = await client.smembers("users");
-  //     let users = usersString.map((user) => JSON.parse(user));
-  //     io.emit("user connecting", users);
-
-  //     console.log("sign up");
-  //   } catch (err) {
-  //     const error = handleError(err);
-  //     console.log(error);
-  //     cb({ error });
-  //   }
-  // };
-  // const login = async (payload, cb) => {
-  //   const { user } = payload;
-  //   if (!user) return cb({ error: "must specify a user" });
-
-  //   try {
-  //     client.sadd(
-  //       "users",
-  //       JSON.stringify({
-  //         user,
-  //       })
-  //     );
-  //     console.log("login success");
-  //   } catch (err) {
-  //     const error = handleError(err);
-  //     cb({ error });
-  //   }
-  // };
   const setConnectedUsers = async (payload, cb) => {
     try {
       const { user } = payload;
@@ -63,11 +27,53 @@ exports.signUp = (io, socket, client) => {
   const getConnectedUsers = async (payload, cb) => {
     try {
       const usersString = await client.smembers("users");
-      let users = usersString
+      let Connectedusers = usersString
         .map((user) => JSON.parse(user))
         .filter((el) => el._id !== payload._id);
-      cb({ status: "success", users });
+
+      const allUsers = await User.find({});
+
+      const threads = await Messages.aggregate([
+        {
+          $match: {
+            $or: [
+              { sender: new mongoose.Types.ObjectId(payload._id) },
+              { reciever: new mongoose.Types.ObjectId(payload._id) },
+            ],
+          },
+        },
+        { $group: { _id: "$sender", lastMessage: { $last: "$content" } } },
+        { $sort: { createAt: 1 } },
+      ]);
+      const threads2 = await Messages.aggregate([
+        {
+          $match: {
+            $or: [
+              { sender: new mongoose.Types.ObjectId(payload._id) },
+              { reciever: new mongoose.Types.ObjectId(payload._id) },
+            ],
+          },
+        },
+        { $group: { _id: "$reciever", lastMessage: { $last: "$content" } } },
+        { $sort: { createAt: 1 } },
+      ]);
+      const set = new Set(threads2, threads);
+
+      const arr = [...set];
+      //?  cant be sure about this one
+      const recentUsers = await User.find({
+        _id: { $in: arr },
+      });
+
+      arr.forEach((el, index) => {
+        el.user = recentUsers[index];
+      });
+
+      let users = allUsers.filter((el) => el._id !== payload._id);
+
+      cb({ status: "success", users, Connectedusers });
     } catch (err) {
+      console.log(err);
       const error = handleError(err);
       cb({ status: "error", error });
     }
@@ -90,9 +96,7 @@ exports.signUp = (io, socket, client) => {
     // }
   };
 
-  // socket.on("signup", signup);
   socket.on("connect to server", setConnectedUsers);
   socket.on("get connected users", getConnectedUsers);
-  // socket.on("login", login);
   socket.on("disconnect", onDisconnect);
 };
