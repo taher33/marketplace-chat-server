@@ -1,7 +1,7 @@
 const Messages = require("../models/messages");
 const Notifications = require("../models/notification");
+const Thread = require("../models/threads");
 const { handleError } = require("../utils/errors");
-const { handleToken } = require("../utils/jwt-token");
 
 module.exports = (io, socket, client) => {
   async function privateMessage(payload, cb) {
@@ -11,7 +11,7 @@ module.exports = (io, socket, client) => {
     if (!payload.content)
       return cb({ status: "error", error: "select a user" });
 
-    const { reciever, sender, content } = payload;
+    const { reciever, sender, content, threadId } = payload;
     try {
       const usersString = await client.smembers("users");
 
@@ -24,7 +24,6 @@ module.exports = (io, socket, client) => {
         content,
       };
       if (user.length !== 0) {
-        console.log(msg);
         socket.to(reciever).emit("private message", msg);
       } else {
         //create notification in case user is not connected
@@ -36,11 +35,22 @@ module.exports = (io, socket, client) => {
         });
       }
 
-      await Messages.create({
+      const newMessage = await Messages.create({
         sender,
         content,
         reciever,
       });
+      if (threadId) {
+        const thread = await Thread.findByIdAndUpdate(threadId, {
+          messages: this.messages,
+        });
+      } else {
+        const thread = await Thread.create({
+          client: sender,
+          partner: reciever,
+          messages: [newMessage._id],
+        });
+      }
 
       cb({ status: "success", msg });
     } catch (err) {

@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const threadSchema = new mongoose.Schema({
-  client: { type: mongoose.SchemaTypes.ObjectId, ref: "User" },
-  partner: { type: mongoose.SchemaTypes.ObjectId, ref: "User" },
+  client: { type: mongoose.SchemaTypes.ObjectId, ref: "User", required: true },
+  partner: { type: mongoose.SchemaTypes.ObjectId, ref: "User", required: true },
   messages: [{ type: mongoose.SchemaTypes.ObjectId, ref: "Messages" }],
   createdAt: {
     type: Date,
