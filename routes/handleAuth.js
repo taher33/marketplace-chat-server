@@ -24,6 +24,32 @@ exports.signUp = (io, socket, client) => {
     }
   };
 
+  /**
+   *threads:
+   *client:id
+   *otherUser:id
+   *messages:[id,id,id]
+   updatedAt:time
+   createdat:time
+   *-------
+   user:
+   thread:[id,id,id]
+   -----
+  create new thread:
+  first message
+
+  -----
+  last seen:
+  create message -> unseen
+  indication to the reciever
+  reciever online
+  the gababoy compares:
+  how?
+  on recieving new privet message lites up if he is not selected
+  light out when selected
+   *  
+   */
+
   const getConnectedUsers = async (payload, cb) => {
     try {
       const usersString = await client.smembers("users");

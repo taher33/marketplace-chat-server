@@ -30,8 +30,11 @@ const userSchema = new mongoose.Schema({
   },
   People_I_follow: [{ type: mongoose.SchemaTypes.ObjectId, ref: "User" }],
   People_that_follow_me: [{ type: mongoose.SchemaTypes.ObjectId, ref: "User" }],
+  threads: [{ type: mongoose.SchemaTypes.ObjectId, ref: "Thread" }],
+
   createdAt: {
     type: Date,
+    default: Date.now(),
   },
   updatedAt: {
     // still needs work here
