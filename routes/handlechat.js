@@ -1,5 +1,6 @@
 const Messages = require("../models/messages");
 const Notifications = require("../models/notification");
+const User = require("../models/user");
 const Thread = require("../models/threads");
 const { handleError } = require("../utils/errors");
 
@@ -50,6 +51,11 @@ module.exports = (io, socket, client) => {
           partner: reciever,
           messages: [newMessage._id],
         });
+
+        const users = await User.find({
+          _id: { $in: [sender, reciever] },
+        });
+        console.log(users);
       }
 
       cb({ status: "success", msg });

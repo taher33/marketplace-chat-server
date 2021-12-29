@@ -28,9 +28,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "default-img.png",
   },
-  People_I_follow: [{ type: mongoose.SchemaTypes.ObjectId, ref: "User" }],
-  People_that_follow_me: [{ type: mongoose.SchemaTypes.ObjectId, ref: "User" }],
-  threads: [{ type: mongoose.SchemaTypes.ObjectId, ref: "Thread" }],
+  People_I_follow: [
+    { type: mongoose.SchemaTypes.ObjectId, ref: "User", default: [] },
+  ],
+  People_that_follow_me: [
+    { type: mongoose.SchemaTypes.ObjectId, ref: "User", default: [] },
+  ],
+  threads: [
+    { type: mongoose.SchemaTypes.ObjectId, ref: "Thread", default: [] },
+  ],
 
   createdAt: {
     type: Date,
