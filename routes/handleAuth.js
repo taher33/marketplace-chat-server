@@ -3,17 +3,17 @@ const User = require("../models/user");
 const Messages = require("../models/messages");
 const mongoose = require("mongoose");
 
-exports.signUp = (io, socket, client) => {
+exports.signUp = (io, socket, redisClient) => {
   const setConnectedUsers = async (payload, cb) => {
     try {
       const { user } = payload;
       const ConnectedUser = JSON.stringify(user);
-      const usersString = await client.smembers("users");
+      const usersString = await redisClient.smembers("users");
       let users = usersString
         .map((user) => JSON.parse(user))
         .filter((el) => el._id === user._id);
       if (!users[0]) {
-        await client.sadd("users", ConnectedUser);
+        await redisClient.sadd("users", ConnectedUser);
       }
       cb({ status: "success" });
       socket.join(user._id);
@@ -52,52 +52,62 @@ exports.signUp = (io, socket, client) => {
 
   const getConnectedUsers = async (payload, cb) => {
     try {
-      const usersString = await client.smembers("users");
+      const usersString = await redisClient.smembers("users");
       let Connectedusers = usersString
         .map((user) => JSON.parse(user))
-        .filter((el) => el._id !== payload._id);
+        .filter((el) => el._id !== payload._id)
+        .map((el) => el._id);
 
-      const allUsers = await User.find({});
-
-      const threads = await Messages.aggregate([
-        {
-          $match: {
-            $or: [
-              { sender: new mongoose.Types.ObjectId(payload._id) },
-              { reciever: new mongoose.Types.ObjectId(payload._id) },
-            ],
+      const client = await User.findById(payload._id)
+        .populate({
+          path: "threads",
+          populate: {
+            path: "clients",
+            model: "User",
           },
-        },
-        { $group: { _id: "$sender", lastMessage: { $last: "$content" } } },
-        { $sort: { createAt: 1 } },
-      ]);
-      const threads2 = await Messages.aggregate([
-        {
-          $match: {
-            $or: [
-              { sender: new mongoose.Types.ObjectId(payload._id) },
-              { reciever: new mongoose.Types.ObjectId(payload._id) },
-            ],
-          },
-        },
-        { $group: { _id: "$reciever", lastMessage: { $last: "$content" } } },
-        { $sort: { createAt: 1 } },
-      ]);
-      const set = new Set(threads2, threads);
+        })
+        .exec();
 
-      const arr = [...set];
+      // });
+      // const threads = await Messages.aggregate([
+      //   {
+      //     $match: {
+      //       $or: [
+      //         { sender: new mongoose.Types.ObjectId(payload._id) },
+      //         { reciever: new mongoose.Types.ObjectId(payload._id) },
+      //       ],
+      //     },
+      //   },
+      //   { $group: { _id: "$sender", lastMessage: { $last: "$content" } } },
+      //   { $sort: { createAt: 1 } },
+      // ]);
+      // const threads2 = await Messages.aggregate([
+      //   {
+      //     $match: {
+      //       $or: [
+      //         { sender: new mongoose.Types.ObjectId(payload._id) },
+      //         { reciever: new mongoose.Types.ObjectId(payload._id) },
+      //       ],
+      //     },
+      //   },
+      //   { $group: { _id: "$reciever", lastMessage: { $last: "$content" } } },
+      //   { $sort: { createAt: 1 } },
+      // ]);
+      // const set = new Set(threads2, threads);
+
+      // const arr = [...set];
       //?  cant be sure about this one
-      const recentUsers = await User.find({
-        _id: { $in: arr },
-      });
+      // const recentUsers = await User.find({
+      //   _id: { $in: arr },
+      // });
 
-      arr.forEach((el, index) => {
-        el.user = recentUsers[index];
-      });
+      // arr.forEach((el, index) => {
+      //   el.user = recentUsers[index];
+      // });
 
-      let users = allUsers.filter((el) => el._id !== payload._id);
+      // let users = allUsers.filter((el) => el._id !== payload._id);
 
-      cb({ status: "success", users, Connectedusers });
+      cb({ status: "success", threads: client.threads, Connectedusers });
     } catch (err) {
       console.log(err);
       const error = handleError(err);
@@ -115,7 +125,7 @@ exports.signUp = (io, socket, client) => {
     //     id: socket.user.data.id,
     //   });
     //   //remove the user from redis
-    //   await client.srem("users", user);
+    //   await redisClient.srem("users", user);
     //   console.log("disconnect");
     // } catch (err) {
     //   console.log(err);
