@@ -15,6 +15,7 @@ const messageSchema = new mongoose.Schema({
     required: [true, "must specify sender of the message"],
     ref: "User",
   },
+  read: { type: Boolean, default: false },
   createdAt: {
     type: Date,
     default: Date.now(),

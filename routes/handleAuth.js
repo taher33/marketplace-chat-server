@@ -68,45 +68,6 @@ exports.signUp = (io, socket, redisClient) => {
         })
         .exec();
 
-      // });
-      // const threads = await Messages.aggregate([
-      //   {
-      //     $match: {
-      //       $or: [
-      //         { sender: new mongoose.Types.ObjectId(payload._id) },
-      //         { reciever: new mongoose.Types.ObjectId(payload._id) },
-      //       ],
-      //     },
-      //   },
-      //   { $group: { _id: "$sender", lastMessage: { $last: "$content" } } },
-      //   { $sort: { createAt: 1 } },
-      // ]);
-      // const threads2 = await Messages.aggregate([
-      //   {
-      //     $match: {
-      //       $or: [
-      //         { sender: new mongoose.Types.ObjectId(payload._id) },
-      //         { reciever: new mongoose.Types.ObjectId(payload._id) },
-      //       ],
-      //     },
-      //   },
-      //   { $group: { _id: "$reciever", lastMessage: { $last: "$content" } } },
-      //   { $sort: { createAt: 1 } },
-      // ]);
-      // const set = new Set(threads2, threads);
-
-      // const arr = [...set];
-      //?  cant be sure about this one
-      // const recentUsers = await User.find({
-      //   _id: { $in: arr },
-      // });
-
-      // arr.forEach((el, index) => {
-      //   el.user = recentUsers[index];
-      // });
-
-      // let users = allUsers.filter((el) => el._id !== payload._id);
-
       cb({ status: "success", threads: client.threads, Connectedusers });
     } catch (err) {
       console.log(err);
