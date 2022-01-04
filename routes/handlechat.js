@@ -16,9 +16,9 @@ module.exports = (io, socket, client) => {
         return cb({ status: "error", error: "thread does not exist" });
 
       let reciever;
-      if (thread.clients[0] === reciever) partner = thread.clients[1];
+      if (`${thread.clients[0]}` === sender) reciever = thread.clients[1];
       else reciever = thread.clients[0];
-
+      console.log(`${thread.clients[0]}` === sender);
       let msg = {
         sender,
         reciever,
@@ -28,12 +28,13 @@ module.exports = (io, socket, client) => {
       const usersString = await client.smembers("users");
 
       const users = usersString.map((user) => JSON.parse(user));
-      const user = users.filter((user) => user._id === reciever);
+      const user = users.filter((user) => {
+        return user._id === `${reciever}`;
+      });
       if (user.length !== 0) {
-        socket.to(reciever).emit("private message", { msg, threadId });
+        socket.to(`${reciever}`).emit("private message", { msg, threadId });
       } else {
         //create notification in case user is not connected
-        console.log("hellow");
         await Notifications.create({
           type: "message",
           client: reciever,
