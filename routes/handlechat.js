@@ -66,8 +66,17 @@ module.exports = (io, socket, client) => {
     try {
       const client = await User.findById(sender);
       const partner = await User.findById(reciever);
-      if (!client || !partner) return cb({ status: "error" });
+
+      const [prevThread] = await Thread.find({ clients: reciever });
       const message = await Messages.create({ sender, content, reciever });
+
+      if (!client || !partner) return cb({ status: "error" });
+
+      if (prevThread) {
+        prevThread.messages.push(message._id);
+        prevThread.save({ validateBeforeSave: false });
+        return cb({ status: "success" });
+      }
       const thread = await Thread.create({
         clients: [sender, reciever],
         messages: [message],

@@ -67,7 +67,6 @@ exports.signUp = (io, socket, redisClient) => {
           },
         })
         .exec();
-
       cb({ status: "success", threads: client.threads, Connectedusers });
     } catch (err) {
       console.log(err);
