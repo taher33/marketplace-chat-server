@@ -23,6 +23,7 @@ module.exports = (io, socket, client) => {
         sender,
         reciever,
         content,
+        read: false,
       };
 
       const usersString = await client.smembers("users");
