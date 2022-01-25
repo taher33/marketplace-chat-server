@@ -66,6 +66,13 @@ exports.signUp = (io, socket, redisClient) => {
             model: "User",
           },
         })
+        .populate({
+          path: "threads",
+          populate: {
+            path: "messages",
+            model: "Messages",
+          },
+        })
         .exec();
       cb({ status: "success", threads: client.threads, Connectedusers });
     } catch (err) {
