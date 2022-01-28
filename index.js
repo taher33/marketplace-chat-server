@@ -66,6 +66,23 @@ const onConnection = (socket) => {
   signUp(io, socket, redisClient);
   handlechat(io, socket, redisClient);
 
+  socket.on("disconnecting", async () => {
+    const id = [...socket.rooms][1];
+    try {
+      const usersString = await redisClient.smembers("users");
+
+      let users = usersString
+        .map((user) => JSON.parse(user))
+        .filter((el) => el._id === id);
+      if (!!users.length) {
+        let user = JSON.stringify(users[0]);
+        await redisClient.srem("users", user);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
   // io.of("/").adapter.on("join-room", (room, id) => {
   //   console.log(`socket ${id} has joined room ${room}`);
   // });

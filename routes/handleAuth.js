@@ -24,32 +24,6 @@ exports.signUp = (io, socket, redisClient) => {
     }
   };
 
-  /**
-   *threads:
-   *client:id
-   *otherUser:id
-   *messages:[id,id,id]
-   updatedAt:time
-   createdat:time
-   *-------
-   user:
-   thread:[id,id,id]
-   -----
-  create new thread:
-  first message
-
-  -----
-  last seen:
-  create message -> unseen
-  indication to the reciever
-  reciever online
-  the gababoy compares:
-  how?
-  on recieving new privet message lites up if he is not selected
-  light out when selected
-   *  
-   */
-
   const getConnectedUsers = async (payload, cb) => {
     try {
       const usersString = await redisClient.smembers("users");
@@ -83,23 +57,23 @@ exports.signUp = (io, socket, redisClient) => {
   };
 
   const onDisconnect = async () => {
-    //!this needs work
-    console.log("disconnect");
-    // try {
-    //   const user = JSON.stringify({
-    //     name: socket.user.data.name,
-    //     email: socket.user.data.email,
-    //     id: socket.user.data.id,
-    //   });
-    //   //remove the user from redis
-    //   await redisClient.srem("users", user);
-    //   console.log("disconnect");
-    // } catch (err) {
-    //   console.log(err);
-    // }
+    console.log(Object.keys(socket.rooms));
+    try {
+      // let users = usersString
+      //   .map((user) => JSON.parse(user))
+      //   .filter((el) => el._id === id);
+      // if (!!users.length) {
+      //   let user = JSON.stringify(users[0]);
+      //   console.log(user);
+      //   // await redisClient.srem("users", user);
+      //   console.log("removed");
+      // }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   socket.on("connect to server", setConnectedUsers);
   socket.on("get connected users", getConnectedUsers);
-  socket.on("disconnect", onDisconnect);
+  // socket.on("disconnecting", onDisconnect);
 };
