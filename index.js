@@ -66,6 +66,7 @@ const onConnection = (socket) => {
   signUp(io, socket, redisClient);
   handlechat(io, socket, redisClient);
 
+  // did not work with on disconnect function
   socket.on("disconnecting", async () => {
     const id = [...socket.rooms][1];
     try {

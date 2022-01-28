@@ -32,23 +32,23 @@ exports.signUp = (io, socket, redisClient) => {
         .filter((el) => el._id !== payload._id)
         .map((el) => el._id);
 
-      const client = await User.findById(payload._id)
-        .populate({
-          path: "threads",
-          populate: {
-            path: "clients",
-            model: "User",
-          },
-        })
-        .populate({
-          path: "threads",
-          populate: {
-            path: "messages",
-            model: "Messages",
-          },
-        })
-        .exec();
-      cb({ status: "success", threads: client.threads, Connectedusers });
+      // const client = await User.findById(payload._id)
+      //   .populate({
+      //     path: "threads",
+      //     populate: {
+      //       path: "clients",
+      //       model: "User",
+      //     },
+      //   })
+      //   .populate({
+      //     path: "threads",
+      //     populate: {
+      //       path: "messages",
+      //       model: "Messages",
+      //     },
+      //   })
+      //   .exec();
+      cb({ status: "success", Connectedusers });
     } catch (err) {
       console.log(err);
       const error = handleError(err);
