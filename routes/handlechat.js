@@ -34,14 +34,6 @@ module.exports = (io, socket, client) => {
       });
       if (user.length !== 0) {
         socket.to(`${reciever}`).emit("private message", { msg, threadId });
-      } else {
-        //create notification in case user is not connected
-        await Notifications.create({
-          type: "message",
-          client: reciever,
-          body: content,
-          creator: sender,
-        });
       }
 
       const newMessage = await Messages.create({
@@ -62,13 +54,22 @@ module.exports = (io, socket, client) => {
   }
 
   const newPrivateMessage = async (payload, cb) => {
-    const { sender, reciever, content } = payload;
-    if (!reciever || !sender || !content) return cb({ status: "error" });
+    const { sender, reciever, content, productId } = payload;
+    if (!reciever || !sender || !content || !productId)
+      return cb({
+        error: "please specify the following : message content ,product",
+        status: "error",
+      });
     try {
       const client = await User.findById(sender);
       const partner = await User.findById(reciever);
 
-      const [prevThread] = await Thread.find({ clients: reciever });
+      const [prevThread] = await Thread.find({
+        clients: sender,
+        productThread: true,
+        product: productId,
+      });
+
       const message = await Messages.create({ sender, content, reciever });
 
       if (!client || !partner) return cb({ status: "error" });
@@ -81,6 +82,8 @@ module.exports = (io, socket, client) => {
       const thread = await Thread.create({
         clients: [sender, reciever],
         messages: [message],
+        productThread: true,
+        product: productId,
       });
 
       client.threads.push(thread._id);

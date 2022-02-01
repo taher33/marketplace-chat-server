@@ -12,6 +12,8 @@ const threadSchema = new mongoose.Schema({
     type: Date,
     default: Date.now(),
   },
+  productThread: { type: Boolean, default: false },
+  product: { type: mongoose.SchemaTypes.ObjectId, ref: "Products" },
 });
 
 threadSchema.pre("save", function (next) {

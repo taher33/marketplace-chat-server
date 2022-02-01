@@ -32,22 +32,6 @@ exports.signUp = (io, socket, redisClient) => {
         .filter((el) => el._id !== payload._id)
         .map((el) => el._id);
 
-      // const client = await User.findById(payload._id)
-      //   .populate({
-      //     path: "threads",
-      //     populate: {
-      //       path: "clients",
-      //       model: "User",
-      //     },
-      //   })
-      //   .populate({
-      //     path: "threads",
-      //     populate: {
-      //       path: "messages",
-      //       model: "Messages",
-      //     },
-      //   })
-      //   .exec();
       cb({ status: "success", Connectedusers });
     } catch (err) {
       console.log(err);
@@ -56,24 +40,6 @@ exports.signUp = (io, socket, redisClient) => {
     }
   };
 
-  const onDisconnect = async () => {
-    console.log(Object.keys(socket.rooms));
-    try {
-      // let users = usersString
-      //   .map((user) => JSON.parse(user))
-      //   .filter((el) => el._id === id);
-      // if (!!users.length) {
-      //   let user = JSON.stringify(users[0]);
-      //   console.log(user);
-      //   // await redisClient.srem("users", user);
-      //   console.log("removed");
-      // }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
   socket.on("connect to server", setConnectedUsers);
   socket.on("get connected users", getConnectedUsers);
-  // socket.on("disconnecting", onDisconnect);
 };
