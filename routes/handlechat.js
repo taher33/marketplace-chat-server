@@ -69,7 +69,6 @@ module.exports = (io, socket, client) => {
         productThread: true,
         product: productId,
       });
-
       const message = await Messages.create({ sender, content, reciever });
 
       if (!client || !partner) return cb({ status: "error" });
@@ -86,6 +85,7 @@ module.exports = (io, socket, client) => {
         product: productId,
       });
 
+      console.log("thread", thread);
       client.threads.push(thread._id);
       partner.threads.push(thread._id);
       client.save({ validateBeforeSave: false });
