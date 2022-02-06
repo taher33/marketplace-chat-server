@@ -103,10 +103,15 @@ module.exports = (io, socket, client) => {
     const { threadId } = payload;
     if (!threadId)
       return cb({ status: "error", error: "thread id not provided" });
+
     try {
       const thread = await Thread.findById(threadId).populate("messages");
+
+      if (!thread) return cb({ status: "error", error: "thread is not found" });
+
       cb({ status: "success", prevMessages: thread.messages });
     } catch (err) {
+      console.log(err);
       const error = handleError(err);
       cb({ status: "error", error });
     }
